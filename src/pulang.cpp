@@ -29,20 +29,20 @@ int main(int argc, char *argv[]) {
   using namespace clipp;
 
 // set log level
-#define DEBUG
+#define RELEASE
 #ifdef DEBUG
   spdlog::warn("DEBUG LEVEL");
   spdlog::set_level(spdlog::level::debug);
 #endif
 #ifdef RELEASE
-  spdlog::set_level(spdlog::level::err);
+  spdlog::set_level(spdlog::level::info);
 #endif
 
   // command line parser
   spdlog::debug("init command line parser");
   // define modes
   enum class mode { compile, help };
-  mode selected = mode::help;
+  mode selected;
 
   // compileMode
   spdlog::debug("init compileMode");
@@ -55,37 +55,42 @@ int main(int argc, char *argv[]) {
 
   // helpMode
   spdlog::debug("init helpMode");
-  auto helpMode = (command("help").set(selected, mode::help));
+  auto helpMode = (option("-h", "-help")
+                       .set(selected, mode::help)
+                       .doc("show help and exit"));
+
+  // versionMode
+  spdlog::debug("init versionMode");
+  auto versionMode = (option("-v", "-version")
+                          .call([] {
+                            spdlog::info("PuLang version 1.0");
+                            exit(0);
+                          })
+                          .doc("show version and exit"));
 
   // cli parser
   spdlog::debug("init cli");
-  auto cli =
-      ((compileMode | helpMode), option("-v", "-version")
-                                     .call([] {
-                                       spdlog::info("PuLang version 1.0");
-                                       exit(0);
-                                     })
-                                     .doc("show version and exit."));
+  auto cli = ((compileMode | helpMode | versionMode));
 
   // do parse job
   spdlog::debug("parse command line");
   parse(argc, argv, cli);
 
-  // switch to different modes
-  spdlog::debug("switch select");
+  // switch to a mode
   switch (selected) {
-  case mode::compile:
-    spdlog::debug("enter compile");
-    if (!compile()) {
-      spdlog::critical("exit with exception");
-      return -1;
-    }
-    return 0;
   case mode::help:
     spdlog::debug("enter help");
     cout << make_man_page(cli, "pulang");
-    return 0;
+    exit(0);
+  case mode::compile:
+    if (!compile()) {
+      spdlog::critical("exit with exception");
+      exit(-1);
+    }
+    exit(0);
   }
+
+  // final exit
   spdlog::debug("final exit");
   return 0;
 }
