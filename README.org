@@ -1,0 +1,11 @@
+* PuLang - To My Life Teacher
+** Build
+*** Windows
+    We use Cmake and Ninja. Make sure you are at the project root. Then:
+    #+begin_src bash
+      mkdir build
+      cd build
+      cmake ../src -GNinja
+      cmake --build .
+    #+end_src
+    After that, you should also copy the `antlr4-runtime.dll' from `lib/'.
