@@ -8,4 +8,4 @@
       cmake ../src -GNinja
       cmake --build .
     #+end_src
-    After that, you should also copy the `antlr4-runtime.dll' from `lib/'.
+    After that, you should also copy the *antlr4-runtime.dll* from *lib/*.
