@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
   using namespace clipp;
 
 // set log level
-#define RELEASE
+#define DEBUG
 #ifdef DEBUG
   spdlog::warn("DEBUG LEVEL");
   spdlog::set_level(spdlog::level::debug);
@@ -41,8 +41,8 @@ int main(int argc, char *argv[]) {
   // command line parser
   spdlog::debug("init command line parser");
   // define modes
-  enum class mode { compile, help };
-  mode selected;
+  enum class mode { compile, help, unselected };
+  mode selected = mode::unselected;
 
   // compileMode
   spdlog::debug("init compileMode");
@@ -78,6 +78,10 @@ int main(int argc, char *argv[]) {
 
   // switch to a mode
   switch (selected) {
+  case mode::unselected:
+    spdlog::error("please select a mode");
+    spdlog::info("-h for more information");
+    exit(0);
   case mode::help:
     spdlog::debug("enter help");
     cout << make_man_page(cli, "pulang");
@@ -95,38 +99,53 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+// compile worker
 bool compile(void) {
   using namespace antlr4;
   using namespace antlrcpp;
+
+  // check the number of input files
   if (input.size() == 0) {
     spdlog::error("no input file");
     return false;
   }
+
+  // debug the files
   for (string i : input) {
     spdlog::debug("with input file {}", i);
   }
   spdlog::debug("with output path {}", output);
-  ifstream fin(input[0]);
-  if (!fin) {
-    spdlog::error("cannot open file");
-    return false;
+
+  string content, s;
+  int compiled_file_count = 0;
+  ifstream fin;
+  for (string fname : input) {
+    // read the file
+    spdlog::debug("current file name: {}", fname);
+    fin.open(fname);
+    if (!fin) {
+      spdlog::error("cannot open file: {}", fname);
+      continue;
+    }
+    while (getline(fin, s)) {
+      spdlog::debug("get content: {}", s);
+      content += s;
+    }
+    fin.close();
+
+    // parse the file
+    ANTLRInputStream input(content);
+    PuLangLexer lexer(&input);
+    CommonTokenStream tokens(&lexer);
+    PuLangParser parser(&tokens);
+    tree::ParseTree *tree = parser.expression();
+    cout << "Parse tree: " << tree->toStringTree(&parser) << endl;
+    ++compiled_file_count;
   }
-  string content, buf;
-  while (getline(fin, buf)) {
-    spdlog::debug("get content: {}", buf);
-    content += buf;
+  if (compiled_file_count == 1) {
+    spdlog::info("{}/{} file compiled", compiled_file_count, input.size());
+  } else {
+    spdlog::info("{}/{} files compiled", compiled_file_count, input.size());
   }
-  spdlog::debug("content:\n{}", content);
-  fin.close();
-  ANTLRInputStream input(content);
-  PuLangLexer lexer(&input);
-  CommonTokenStream tokens(&lexer);
-
-  PuLangParser parser(&tokens);
-  tree::ParseTree *tree = parser.expression();
-
-  wstring s = s2ws(tree->toStringTree(&parser)) + L"\n";
-
-  wcout << "Parse Tree: " << s << std::endl;
   return true;
 }

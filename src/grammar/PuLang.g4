@@ -51,7 +51,7 @@ Id
 String
     : QUOTE ~["\\\r\n]+? QUOTE;
 Integer
-    : (MINUS? NonZeroDigit Digit*)|'0';
+    : (NonZeroDigit Digit*)|'0';
 Decimal
     : Integer DOT Digit* NonZeroDigit;
 

@@ -3,7 +3,6 @@
 
 
 #include "PuLangListener.h"
-#include "PuLangVisitor.h"
 
 #include "PuLangParser.h"
 
@@ -69,14 +68,6 @@ void PuLangParser::LiteralValueContext::exitRule(tree::ParseTreeListener *listen
   auto parserListener = dynamic_cast<PuLangListener *>(listener);
   if (parserListener != nullptr)
     parserListener->exitLiteralValue(this);
-}
-
-
-antlrcpp::Any PuLangParser::LiteralValueContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<PuLangVisitor*>(visitor))
-    return parserVisitor->visitLiteralValue(this);
-  else
-    return visitor->visitChildren(this);
 }
 
 PuLangParser::LiteralValueContext* PuLangParser::literalValue() {
@@ -198,14 +189,6 @@ void PuLangParser::ExpressionContext::exitRule(tree::ParseTreeListener *listener
   auto parserListener = dynamic_cast<PuLangListener *>(listener);
   if (parserListener != nullptr)
     parserListener->exitExpression(this);
-}
-
-
-antlrcpp::Any PuLangParser::ExpressionContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<PuLangVisitor*>(visitor))
-    return parserVisitor->visitExpression(this);
-  else
-    return visitor->visitChildren(this);
 }
 
 
